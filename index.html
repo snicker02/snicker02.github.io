@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>snicker02 — index</title>
+<style>
+  :root{
+    --bg:#0a0c12; --bg2:#12141d; --line:#1e2233;
+    --ink:#e7e9f2; --dim:#7c8199; --dimmer:#565b73;
+    --c1:#52e0d0;            /* plotter cyan  */
+    --c2:#a07bff;            /* spectral violet */
+    --focus:#7fd8ff;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--mono);
+    font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  #field{position:fixed; inset:0; z-index:0; display:block}
+  .wrap{
+    position:relative; z-index:1; max-width:960px; margin:0 auto;
+    padding:clamp(28px,7vw,80px) clamp(20px,5vw,48px) 80px;
+  }
+
+  /* ---- header ---- */
+  header{margin-bottom:clamp(28px,5vw,48px)}
+  .eyebrow{
+    font-size:12px; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--dim); margin:0 0 14px;
+  }
+  h1{
+    margin:0; font-size:clamp(34px,8vw,64px); line-height:1;
+    font-weight:700; letter-spacing:-.01em;
+  }
+  h1 .slash{
+    background:linear-gradient(90deg,var(--c1),var(--c2));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .sub{color:var(--dim); margin:16px 0 0; max-width:56ch}
+  .sub a{color:var(--c1); text-decoration:none; border-bottom:1px solid transparent}
+  .sub a:hover{border-bottom-color:var(--c1)}
+
+  /* ---- controls ---- */
+  .bar{
+    display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+    margin:clamp(24px,4vw,40px) 0 8px;
+  }
+  .search{
+    flex:1 1 240px; min-width:0; display:flex; align-items:center; gap:10px;
+    background:var(--bg2); border:1px solid var(--line); border-radius:8px;
+    padding:10px 14px;
+  }
+  .search span{color:var(--dimmer)}
+  .search input{
+    flex:1; min-width:0; background:none; border:0; color:var(--ink);
+    font:inherit; outline:none;
+  }
+  .search input::placeholder{color:var(--dimmer)}
+  .count{font-size:13px; color:var(--dim); white-space:nowrap}
+  .count b{color:var(--ink); font-weight:700}
+
+  /* ---- list ---- */
+  ul{list-style:none; margin:0; padding:0; border-top:1px solid var(--line)}
+  li{border-bottom:1px solid var(--line)}
+  .card{
+    display:grid; grid-template-columns:1fr auto; gap:6px 24px;
+    padding:20px 4px; align-items:baseline; transition:background .15s;
+  }
+  .card:hover{background:rgba(255,255,255,.02)}
+  .name{
+    font-size:18px; font-weight:700; letter-spacing:-.005em;
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .name a.title{color:var(--ink); text-decoration:none}
+  .name a.title:hover{
+    background:linear-gradient(90deg,var(--c1),var(--c2));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .badge{
+    font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+    padding:3px 8px; border-radius:999px; border:1px solid;
+  }
+  .badge.live{color:var(--c1); border-color:rgba(82,224,208,.4)}
+  .badge.pin{color:var(--c2); border-color:rgba(160,123,255,.4)}
+  .badge.arch{color:var(--dimmer); border-color:var(--line)}
+  .desc{grid-column:1; color:var(--dim); font-size:14px; max-width:64ch}
+  .meta{
+    grid-column:2; grid-row:1/3; align-self:center;
+    text-align:right; color:var(--dimmer); font-size:12px;
+    display:flex; flex-direction:column; gap:6px; align-items:flex-end;
+  }
+  .meta .lang{display:flex; align-items:center; gap:7px; color:var(--dim)}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--dim)}
+  .links{display:flex; gap:14px}
+  .links a{color:var(--dimmer); text-decoration:none}
+  .links a:hover{color:var(--c1)}
+
+  /* ---- states ---- */
+  .state{padding:40px 4px; color:var(--dim)}
+  .state code{
+    background:var(--bg2); border:1px solid var(--line); border-radius:5px;
+    padding:2px 7px; color:var(--ink);
+  }
+  a:focus-visible, input:focus-visible{outline:2px solid var(--focus); outline-offset:3px; border-radius:3px}
+
+  footer{margin-top:48px; color:var(--dimmer); font-size:12px}
+  footer a{color:var(--dim); text-decoration:none}
+  footer a:hover{color:var(--c1)}
+
+  @media (max-width:560px){
+    .card{grid-template-columns:1fr}
+    .meta{grid-column:1; grid-row:auto; text-align:left; align-items:flex-start}
+  }
+  @media (prefers-reduced-motion:reduce){ #field{opacity:.35} }
+</style>
+</head>
+<body>
+<canvas id="field" aria-hidden="true"></canvas>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Generative tools &amp; experiments</p>
+    <h1><span class="slash">/</span>snicker02</h1>
+    <p class="sub">Browser-based creative tools — shaders, fractals, flow fields, procedural
+      texture. Everything below is live on GitHub Pages. Source on
+      <a href="https://github.com/snicker02" target="_blank" rel="noopener">github.com/snicker02</a>.</p>
+  </header>
+
+  <div class="bar">
+    <label class="search">
+      <span>›</span>
+      <input id="q" type="text" placeholder="filter by name, language, description…"
+             autocomplete="off" spellcheck="false" aria-label="Filter projects">
+    </label>
+    <div class="count" id="count"></div>
+  </div>
+
+  <ul id="list"></ul>
+  <div class="state" id="state">Loading repositories…</div>
+
+  <footer>
+    Built as a static page · updates itself from the GitHub API on load ·
+    <a href="https://github.com/snicker02?tab=repositories" target="_blank" rel="noopener">all repositories →</a>
+  </footer>
+</div>
+
+<script>
+/* ------------------------------------------------------------------ CONFIG */
+const USER          = "snicker02";
+const EXCLUDE       = new Set([USER + ".github.io"]);  // hide this page's own repo
+const FEATURED      = [];        // repo names to pin to the top, e.g. ["flow-field-plotter"]
+const HIDE_FORKS    = true;
+const HIDE_ARCHIVED = false;     // set true to hide archived repos entirely
+const REQUIRE_PAGES = false;     // set true to list ONLY repos that have a live Pages site
+/* ------------------------------------------------------------------------- */
+
+const $list  = document.getElementById("list");
+const $state = document.getElementById("state");
+const $count = document.getElementById("count");
+const $q     = document.getElementById("q");
+let repos = [];
+
+function liveURL(r){
+  if (r.homepage && r.homepage.trim()) return r.homepage.trim();
+  if (r.has_pages) return `https://${USER}.github.io/${r.name}/`;
+  return null;
+}
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined,{year:"numeric",month:"short"});
+}
+function langColor(lang){
+  const map={JavaScript:"#f1e05a",TypeScript:"#3178c6",HTML:"#e34c26",CSS:"#563d7c",
+    GLSL:"#5686a5",Python:"#3572A5","C++":"#f34b7d",C:"#555555",GDScript:"#355570",
+    Shell:"#89e051",Rust:"#dea584",Java:"#b07219"};
+  return map[lang] || "var(--dim)";
+}
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+function render(filter=""){
+  const f = filter.trim().toLowerCase();
+  const shown = repos.filter(r=>{
+    if (!f) return true;
+    return (r.name+" "+(r.description||"")+" "+(r.language||"")).toLowerCase().includes(f);
+  });
+
+  $count.innerHTML = `<b>${shown.length}</b> project${shown.length===1?"":"s"}`;
+
+  if (!shown.length){
+    $list.innerHTML="";
+    $state.style.display="block";
+    $state.textContent = f ? "No projects match that filter." : "No projects to show.";
+    return;
+  }
+  $state.style.display="none";
+
+  $list.innerHTML = shown.map(r=>{
+    const url  = liveURL(r);
+    const live = url ? `<span class="badge live">live</span>` : "";
+    const pin  = FEATURED.includes(r.name) ? `<span class="badge pin">pinned</span>` : "";
+    const arch = r.archived ? `<span class="badge arch">archived</span>` : "";
+    const titleHref = url || r.html_url;
+    const lang = r.language
+      ? `<span class="lang"><span class="dot" style="background:${langColor(r.language)}"></span>${esc(r.language)}</span>` : "";
+    const links = [
+      url ? `<a href="${url}" target="_blank" rel="noopener">open ↗</a>` : "",
+      `<a href="${r.html_url}" target="_blank" rel="noopener">code</a>`
+    ].filter(Boolean).join("");
+
+    return `<li><div class="card">
+      <div class="name">
+        <a class="title" href="${titleHref}" target="_blank" rel="noopener">${esc(r.name)}</a>
+        ${pin}${live}${arch}
+      </div>
+      <div class="desc">${esc(r.description) || "<span style='color:var(--dimmer)'>No description</span>"}</div>
+      <div class="meta">
+        ${lang}
+        <span>updated ${fmtDate(r.pushed_at)}</span>
+        <span class="links">${links}</span>
+      </div>
+    </div></li>`;
+  }).join("");
+}
+
+function sortRepos(a,b){
+  const fa=FEATURED.indexOf(a.name), fb=FEATURED.indexOf(b.name);
+  const pa=fa===-1?Infinity:fa, pb=fb===-1?Infinity:fb;
+  if (pa!==pb) return pa-pb;                          // pinned order first
+  return new Date(b.pushed_at)-new Date(a.pushed_at); // then most-recently pushed
+}
+
+async function load(){
+  try{
+    const res = await fetch(
+      `https://api.github.com/users/${USER}/repos?per_page=100&type=owner&sort=pushed`,
+      {headers:{Accept:"application/vnd.github+json"}}
+    );
+    if (!res.ok){
+      if (res.status===403) throw new Error("rate");
+      throw new Error("http "+res.status);
+    }
+    let data = await res.json();
+    repos = data
+      .filter(r=>!EXCLUDE.has(r.name))
+      .filter(r=>!(HIDE_FORKS && r.fork))
+      .filter(r=>!(HIDE_ARCHIVED && r.archived))
+      .filter(r=>!(REQUIRE_PAGES && !liveURL(r)))
+      .sort(sortRepos);
+    render();
+  }catch(err){
+    $list.innerHTML="";
+    $state.style.display="block";
+    if (err.message==="rate"){
+      $state.innerHTML = "GitHub's API rate limit was hit (60 requests/hour per network, no key needed). "
+        + "Try again in a bit, or browse everything at "
+        + `<a href="https://github.com/${USER}?tab=repositories" style="color:var(--c1)">github.com/${USER}</a>.`;
+    }else{
+      $state.innerHTML = "Couldn't reach the GitHub API. "
+        + `View repositories directly at <a href="https://github.com/${USER}?tab=repositories" style="color:var(--c1)">github.com/${USER}</a>.`;
+    }
+  }
+}
+
+$q.addEventListener("input", e=>render(e.target.value));
+load();
+
+/* ------------------------------------------------ ambient flow-field field */
+(function(){
+  const cv = document.getElementById("field");
+  const ctx = cv.getContext("2d");
+  const reduce = matchMedia("(prefers-reduced-motion:reduce)").matches;
+  let W,H,dpr,particles=[],t=0;
+
+  function resize(){
+    dpr = Math.min(devicePixelRatio||1, 2);
+    W = cv.width  = innerWidth*dpr;
+    H = cv.height = innerHeight*dpr;
+    cv.style.width=innerWidth+"px"; cv.style.height=innerHeight+"px";
+    ctx.fillStyle="#0a0c12"; ctx.fillRect(0,0,W,H);
+  }
+  function seed(){
+    const n = Math.round(Math.min(240, (innerWidth*innerHeight)/9000));
+    particles = Array.from({length:n},()=>({
+      x:Math.random()*W, y:Math.random()*H, life:Math.random()*400|0
+    }));
+  }
+  // cheap smooth pseudo-noise angle field (no libs)
+  function angle(x,y){
+    const s = 0.0016;
+    return (Math.sin(x*s + t) + Math.sin(y*s*1.3 - t*0.8)
+          + Math.sin((x+y)*s*0.7 + t*0.5)) * 1.15;
+  }
+  function lerpC(a,b,k){return a.map((v,i)=>Math.round(v+(b[i]-v)*k));}
+  const C1=[82,224,208], C2=[160,123,255];
+
+  function frame(){
+    t += 0.0009;
+    ctx.fillStyle="rgba(10,12,18,0.06)"; ctx.fillRect(0,0,W,H); // slow trail fade
+    for (const p of particles){
+      const a = angle(p.x,p.y);
+      p.x += Math.cos(a)*0.9*dpr; p.y += Math.sin(a)*0.9*dpr;
+      p.life--;
+      if (p.life<0 || p.x<0||p.x>W||p.y<0||p.y>H){
+        p.x=Math.random()*W; p.y=Math.random()*H; p.life=200+Math.random()*300|0;
+      }
+      const k=(Math.sin(a)+1)/2;
+      const c=lerpC(C1,C2,k);
+      ctx.fillStyle=`rgba(${c[0]},${c[1]},${c[2]},0.14)`;
+      ctx.fillRect(p.x,p.y,1.2*dpr,1.2*dpr);
+    }
+    raf=requestAnimationFrame(frame);
+  }
+  let raf;
+  addEventListener("resize",()=>{cancelAnimationFrame(raf);resize();seed();if(!reduce)frame();});
+  resize(); seed();
+  if (reduce){ // draw one static pass
+    for(let i=0;i<600;i++)for(const p of particles){
+      const a=angle(p.x,p.y); p.x+=Math.cos(a)*0.9*dpr; p.y+=Math.sin(a)*0.9*dpr;
+      const k=(Math.sin(a)+1)/2,c=lerpC(C1,C2,k);
+      ctx.fillStyle=`rgba(${c[0]},${c[1]},${c[2]},0.10)`;
+      ctx.fillRect(p.x,p.y,1.2*dpr,1.2*dpr);
+    }
+  } else frame();
+})();
+</script>
+</body>
+</html>
