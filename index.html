@@ -230,7 +230,7 @@ function sortRepos(a,b){
   const fa=FEATURED.indexOf(a.name), fb=FEATURED.indexOf(b.name);
   const pa=fa===-1?Infinity:fa, pb=fb===-1?Infinity:fb;
   if (pa!==pb) return pa-pb;                          // pinned order first
-  return new Date(b.pushed_at)-new Date(a.pushed_at); // then most-recently pushed
+  return a.name.localeCompare(b.name, undefined, {sensitivity:"base", numeric:true}); // then A→Z
 }
 
 async function load(){
