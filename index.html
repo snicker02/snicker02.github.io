@@ -230,6 +230,8 @@ function sortRepos(a,b){
   const fa=FEATURED.indexOf(a.name), fb=FEATURED.indexOf(b.name);
   const pa=fa===-1?Infinity:fa, pb=fb===-1?Infinity:fb;
   if (pa!==pb) return pa-pb;                          // pinned order first
+  const la=liveURL(a)?0:1, lb=liveURL(b)?0:1;
+  if (la!==lb) return la-lb;                          // repos with a live page first
   return a.name.localeCompare(b.name, undefined, {sensitivity:"base", numeric:true}); // then A→Z
 }
 
