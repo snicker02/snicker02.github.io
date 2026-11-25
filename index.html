@@ -169,12 +169,71 @@
     .modal-stage iframe { width: 100%; height: 100%; border: 0; }
     .modal-stage canvas { width: 100%; height: 100%; display: block; }
     .modal-foot { padding: 16px 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; line-height: 1.55; }
+
+    /* Shelf */
+    .pill {
+      display: inline-block; min-width: 18px; padding: 1px 6px; margin-left: 4px; border-radius: 999px;
+      background: rgba(56, 226, 199, 0.16); color: var(--accent); font-family: var(--font-mono); font-size: 11px; text-align: center;
+    }
+    .pill:empty { display: none; }
+    .shelf-tag { color: var(--accent); }
+    .card.shelf-ok.drop-target { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(56, 226, 199, 0.35); }
+    .card.shelf-ok.drop-target .thumb-wrap::after {
+      content: "Drop to open in this app"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(5, 22, 20, 0.72); color: var(--accent); font-weight: 600; font-size: 14px;
+    }
+    #shelfView[hidden] { display: none; }
+    .shelf-bar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+    .shelf-info b { font-size: 16px; margin-right: 10px; }
+    .shelf-info span { font-family: var(--font-mono); font-size: 12px; color: var(--dim); }
+    .shelf-note { margin: 0 0 22px; color: var(--muted); font-size: 13.5px; line-height: 1.55; max-width: 80ch; }
+    .sync-btn.danger:hover { border-color: #f87171; color: #fca5a5; }
+    label.sync-btn { display: inline-flex; align-items: center; }
+    body.dragging-file #shelfView .shelf-grid,
+    body.dragging-file #shelfView .empty { outline: 2px dashed var(--accent); outline-offset: 6px; border-radius: 12px; }
+    .shelf-card .thumb-wrap img { display: block; width: 100%; height: 100%; object-fit: contain; background: #07090e; }
+    .shelf-card .card-body { padding: 14px 16px; gap: 10px; }
+    .open-in { display: flex; gap: 6px; flex-wrap: wrap; }
+    .open-in .lbl { width: 100%; font-size: 12px; color: var(--dim); }
+    .chip {
+      background: none; border: 1px solid rgba(56, 226, 199, 0.35); color: #9ff3e4; border-radius: 999px;
+      padding: 5px 11px; font-size: 12.5px; cursor: pointer; white-space: nowrap;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--accent); }
+    .shelf-card .actions { padding-top: 10px; }
+    .shelf-card .actions button { background: none; border: 0; padding: 0; color: var(--muted); cursor: pointer; font-size: 13px; }
+    .shelf-card .actions button:hover { color: var(--ink); }
+    .shelf-card .actions button.del:hover { color: #fca5a5; }
+    .toast {
+      position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 200;
+      max-width: calc(100% - 32px); background: #0e1118; border: 1px solid rgba(56, 226, 199, 0.5); border-radius: 10px;
+      padding: 10px 14px; font-size: 13.5px; opacity: 0; pointer-events: none; transition: opacity 0.18s;
+    }
+    .toast.on { opacity: 1; pointer-events: auto; }
+    .toast a { color: var(--accent); font-weight: 600; }
+
+    /* Phones: nav scrolls sideways instead of wrapping */
+    @media (max-width: 760px) {
+      .container { padding: 0 16px 56px; }
+      .topbar { gap: 12px 16px; padding: 14px 0 0; border-bottom: 0; }
+      .nav {
+        order: 3; width: 100%; flex-wrap: nowrap; overflow-x: auto; gap: 20px; scrollbar-width: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .nav::-webkit-scrollbar { display: none; }
+      .hero { padding: 24px 0 20px; }
+      .grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    }
+    @media (pointer: coarse) {
+      .sync-btn, .select, .chip { min-height: 40px; }
+      .nav button { padding: 10px 0; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <header class="topbar">
-      <a href="https://snicker02.github.io/" target="_blank" rel="noopener" class="brand">snicker02</a>
+      <a href="https://snicker02.github.io/" class="brand">snicker02</a>
       <nav class="nav" id="navTabs" aria-label="Project categories">
         <button type="button" data-cat="all" class="active">All Works</button>
         <button type="button" data-cat="live">Live Apps</button>
@@ -182,6 +241,7 @@
         <button type="button" data-cat="flow-image">Flow &amp; Image</button>
         <button type="button" data-cat="minecraft">Minecraft</button>
         <button type="button" data-cat="repositories">Repositories</button>
+        <button type="button" data-cat="shelf" id="shelfTab" title="Shared image shelf — images every app can use">⇄ Shelf<span class="pill" id="shelfCount"></span></button>
       </nav>
       <a href="https://github.com/snicker02?tab=repositories" target="_blank" rel="noopener" class="top-cta">GitHub Profile</a>
     </header>
@@ -212,6 +272,20 @@
     <main id="grid" class="grid"></main>
     <div id="emptyState" class="empty" style="display:none;">No projects match your current filter.</div>
 
+    <section id="shelfView" hidden>
+      <div class="shelf-bar">
+        <div class="shelf-info"><b>Shared image shelf</b><span id="shelfMeta"></span></div>
+        <div class="control-right">
+          <label class="sync-btn">Add images<input type="file" id="shelfFile" accept="image/*" multiple hidden></label>
+          <button type="button" class="sync-btn" id="shelfPaste">Paste</button>
+          <button type="button" class="sync-btn danger" id="shelfClear">Clear all</button>
+        </div>
+      </div>
+      <p class="shelf-note">Every app with a <b>⇄ Shelf</b> button reads and writes this same shelf. Save an image in one app, then open it in another. You can also drop or paste images here, or drop an image onto an app's card to open it in that app. Images are kept in this browser only, not uploaded anywhere.</p>
+      <div id="shelfGrid" class="grid shelf-grid"></div>
+      <div id="shelfEmpty" class="empty" hidden>The shelf is empty. Add images here, or use <b>⇄ Shelf → Save current</b> inside an app.</div>
+    </section>
+
     <footer>
       <span>Single-file local archive of <a href="https://snicker02.github.io/" target="_blank" rel="noopener">snicker02.github.io</a>      This page created by Michael A Prostka </span>
       <span id="syncStatus">Embedded verified snapshot · ready offline</span>
@@ -235,11 +309,15 @@
       <div class="modal-foot" id="modalDesc"></div>
     </div>
   </div>
+  <div class="toast" id="toast"></div>
 
+  <script src="shared/bridge.js"></script>
   <script>
     const INITIAL_REPOS = [{"name":"Gnarl-Studio","description":"Solid 3D Gnarl Studio ","language":"JavaScript","homepage":"","has_pages":true,"archived":false,"pushed_at":"2026-11-19T04:48:16Z","html_url":"https://github.com/snicker02/Gnarl-Studio","stargazers_count":0},{"name":"Kyma","description":"3D solid Amazing Surf and Amazing IFS explorer. ","language":"JavaScript","homepage":"https://snicker02.github.io/Kyma/","has_pages":true,"archived":false,"pushed_at":"2026-11-18T18:09:48Z","html_url":"https://github.com/snicker02/Kyma","stargazers_count":0},{"name":"Inversion","description":"Circle-inversion and Apollonian gasket explorer with deep-zoom into inversive fractal geometry.","language":"JavaScript","homepage":"https://snicker02.github.io/Inversion/","has_pages":true,"archived":false,"pushed_at":"2026-11-18T06:16:28Z","html_url":"https://github.com/snicker02/Inversion","stargazers_count":0},{"name":"Pleroma","description":"A solid-geometry ornament engine. Thousands of procedurally generated 3D forms are instanced into a self-similar tunnel and rendered as real, z-buffered, lit solids — producing dense recursive ornamental scenes that recede into a light source.","language":"JavaScript","homepage":"https://snicker02.github.io/Pleroma/","has_pages":true,"archived":false,"pushed_at":"2026-11-18T05:27:04Z","html_url":"https://github.com/snicker02/Pleroma","stargazers_count":0},{"name":"Ekphrasis","description":"**Music from images and video.** Ekphrasis reads an image or a video like a score. A playhead scans the picture, each column becomes a 16th-note step and each horizontal band becomes a pitch. Color sets the key and the harmony, structure sets the melody, and edges and motion set the groove.","language":"JavaScript","homepage":"https://snicker02.github.io/Ekphrasis/","has_pages":true,"archived":false,"pushed_at":"2026-11-17T22:26:16Z","html_url":"https://github.com/snicker02/Ekphrasis","stargazers_count":0},{"name":"FlowFields3D","description":"Traces streamlines through three-dimensional vector fields and extrudes them into shaded ribbons, tubes or lines. It is the spatial counterpart to FlowFieldsPlotter ","language":"JavaScript","homepage":"https://snicker02.github.io/FlowFields3D/","has_pages":true,"archived":false,"pushed_at":"2026-11-15T22:29:03Z","html_url":"https://github.com/snicker02/FlowFields3D","stargazers_count":1},{"name":"Databender","description":"Databends images by corrupting their raw BMP bytes: scramble, byte-math, and a 3D-terrain mode for glitch art.","language":"JavaScript","homepage":"","has_pages":true,"archived":false,"pushed_at":"2026-11-12T20:58:21Z","html_url":"https://github.com/snicker02/Databender","stargazers_count":0},{"name":"Kerf","description":"Step-by-step carving guides built around one tool, the Flexcut Carvin' Jack 2.0 ","language":"JavaScript","homepage":"https://snicker02.github.io/Kerf/","has_pages":true,"archived":false,"pushed_at":"2026-10-29T03:18:44Z","html_url":"https://github.com/snicker02/Kerf","stargazers_count":0},{"name":"Polis","description":"Polis is a free Minecraft city generator that runs in your browser","language":"JavaScript","homepage":"https://snicker02.github.io/Polis/","has_pages":true,"archived":false,"pushed_at":"2026-10-23T14:34:23Z","html_url":"https://github.com/snicker02/Polis","stargazers_count":0},{"name":"Hypostyle","description":"Procedural Minecraft Bedrock architecture from a crystallographic symmetry skeleton. ","language":"JavaScript","homepage":"https://snicker02.github.io/Hypostyle/","has_pages":true,"archived":false,"pushed_at":"2026-09-21T00:25:53Z","html_url":"https://github.com/snicker02/Hypostyle","stargazers_count":0},{"name":"Catoptron3D","description":"The 3D counterpart to Catoptron. Same idea — a stack of coordinate folds, assembled into a shader at runtime and cached by signature — but the folds now bend space inside a raymarched distance estimator, so the fold library becomes fractal geometry instead of image warps.","language":"JavaScript","homepage":"https://snicker02.github.io/Catoptron3D/","has_pages":true,"archived":false,"pushed_at":"2026-09-20T20:57:08Z","html_url":"https://github.com/snicker02/Catoptron3D","stargazers_count":0},{"name":"Fieldcraft","description":"Signed distance fields from a raymarcher, out the other end as Minecraft Bedrock structures.","language":"JavaScript","homepage":"https://snicker02.github.io/Fieldcraft/","has_pages":true,"archived":false,"pushed_at":"2026-09-20T20:41:09Z","html_url":"https://github.com/snicker02/Fieldcraft","stargazers_count":0},{"name":"Mazecraft","description":"Create 3D mazes for Minecraft","language":"HTML","homepage":"https://snicker02.github.io/Mazecraft/","has_pages":true,"archived":false,"pushed_at":"2026-09-20T15:19:55Z","html_url":"https://github.com/snicker02/Mazecraft","stargazers_count":0},{"name":"Imagecraft","description":null,"language":"JavaScript","homepage":null,"has_pages":true,"archived":false,"pushed_at":"2026-09-20T03:48:52Z","html_url":"https://github.com/snicker02/Imagecraft","stargazers_count":0},{"name":"IFScraft","description":"A block editor where placement is recursive. Place a cell or a small cluster, then define transforms and an iteration count, and the shape builds itself out of copies of itself.","language":"JavaScript","homepage":"https://snicker02.github.io/IFScraft/","has_pages":true,"archived":false,"pushed_at":"2026-09-20T00:46:58Z","html_url":"https://github.com/snicker02/IFScraft","stargazers_count":1},{"name":"FlowFieldsPlotter","description":"Flow-field line art for pen plotters — custom gradients, image-driven density, multi-pen color.","language":"HTML","homepage":"https://snicker02.github.io/FlowFieldsPlotter/","has_pages":true,"archived":false,"pushed_at":"2026-09-03T23:31:53Z","html_url":"https://github.com/snicker02/FlowFieldsPlotter","stargazers_count":0},{"name":"Catoptron","description":"Catoptron turns a photo (or a built-in pattern) into kaleidoscopic, fractal, and conformal artwork.","language":"JavaScript","homepage":"https://snicker02.github.io/Catoptron/","has_pages":true,"archived":false,"pushed_at":"2026-08-27T00:18:04Z","html_url":"https://github.com/snicker02/Catoptron","stargazers_count":3},{"name":"Scrawlery","description":"Turns any photo into segmented flow-field line art — organic, hand-drawn-looking ribbon strokes.","language":"HTML","homepage":"","has_pages":true,"archived":false,"pushed_at":"2026-07-30T05:53:34Z","html_url":"https://github.com/snicker02/Scrawlery","stargazers_count":0},{"name":"Strata","description":"Layer-based procedural texture lab — stack noise, gradients, and blend modes into custom textures.","language":"HTML","homepage":"https://snicker02.github.io/Strata/","has_pages":true,"archived":false,"pushed_at":"2026-07-30T01:22:27Z","html_url":"https://github.com/snicker02/Strata","stargazers_count":0},{"name":"Petri","description":"Reaction-diffusion studio — grow organic Gray-Scott patterns, seedable from a dropped image.","language":"HTML","homepage":"https://snicker02.github.io/Petri/","has_pages":true,"archived":false,"pushed_at":"2026-07-23T23:37:16Z","html_url":"https://github.com/snicker02/Petri","stargazers_count":0},{"name":"Painterly","description":"Turns photos into painterly, brush-stroke renderings.","language":"HTML","homepage":"https://snicker02.github.io/Painterly/","has_pages":true,"archived":false,"pushed_at":"2026-07-22T22:34:30Z","html_url":"https://github.com/snicker02/Painterly","stargazers_count":0},{"name":"HallofMirrors3D","description":"symmetry and effect image explorer","language":"GDScript","homepage":"","has_pages":false,"archived":false,"pushed_at":"2026-07-18T22:14:45Z","html_url":"https://github.com/snicker02/HallofMirrors3D","stargazers_count":0},{"name":"MandelbroParams","description":"Mandelbro Params by Brad Stefanov","language":null,"homepage":null,"has_pages":false,"archived":false,"pushed_at":"2026-06-26T01:38:31Z","html_url":"https://github.com/snicker02/MandelbroParams","stargazers_count":0},{"name":"Myflames","description":"My JWildfire flames. ","language":null,"homepage":null,"has_pages":false,"archived":false,"pushed_at":"2026-03-31T19:48:13Z","html_url":"https://github.com/snicker02/Myflames","stargazers_count":5},{"name":"Hyperion","description":"Hyperion is a high-performance generative art tool built in Godot for exploring and recording complex fractals,","language":"GDScript","homepage":null,"has_pages":false,"archived":false,"pushed_at":"2026-03-04T15:41:22Z","html_url":"https://github.com/snicker02/Hyperion","stargazers_count":0},{"name":"Fractility","description":"Fractals and feedbacking combined","language":"GDScript","homepage":"https://sites.google.com/view/meltmixpix/fractility","has_pages":false,"archived":false,"pushed_at":"2026-03-04T15:14:31Z","html_url":"https://github.com/snicker02/Fractility","stargazers_count":18},{"name":"My-JWF-custom-variations","description":"My JWF custom variations","language":"Java","homepage":null,"has_pages":false,"archived":false,"pushed_at":"2026-02-12T21:57:55Z","html_url":"https://github.com/snicker02/My-JWF-custom-variations","stargazers_count":1},{"name":"Serenity","description":"A generative art tool built in Godot for creating styled patterns.","language":"GDScript","homepage":null,"has_pages":true,"archived":false,"pushed_at":"2026-01-19T17:03:27Z","html_url":"https://github.com/snicker02/Serenity","stargazers_count":4},{"name":"Fractility-Presets","description":"Fractility Presets","language":null,"homepage":null,"has_pages":false,"archived":false,"pushed_at":"2025-12-11T03:24:16Z","html_url":"https://github.com/snicker02/Fractility-Presets","stargazers_count":0},{"name":"Evolved-art","description":"Evolved art","language":"Python","homepage":null,"has_pages":false,"archived":false,"pushed_at":"2025-08-09T02:34:30Z","html_url":"https://github.com/snicker02/Evolved-art","stargazers_count":1},{"name":"Swan-custom-variations","description":"Swan custom variations","language":null,"homepage":null,"has_pages":false,"archived":false,"pushed_at":"2025-07-21T02:46:00Z","html_url":"https://github.com/snicker02/Swan-custom-variations","stargazers_count":0},{"name":"MeltMixPix-testing","description":"MeltMixPix testing","language":"JavaScript","homepage":null,"has_pages":true,"archived":false,"pushed_at":"2025-05-02T01:10:36Z","html_url":"https://github.com/snicker02/MeltMixPix-testing","stargazers_count":0},{"name":"MeltMixPix","description":"image manipulators","language":"JavaScript","homepage":null,"has_pages":true,"archived":false,"pushed_at":"2025-05-01T20:20:48Z","html_url":"https://github.com/snicker02/MeltMixPix","stargazers_count":0},{"name":"AI-Prompts","description":"AI-Prompts","language":null,"homepage":null,"has_pages":false,"archived":false,"pushed_at":"2025-02-06T03:42:40Z","html_url":"https://github.com/snicker02/AI-Prompts","stargazers_count":0},{"name":"2021Flames","description":null,"language":null,"homepage":null,"has_pages":false,"archived":false,"pushed_at":"2023-01-08T00:14:55Z","html_url":"https://github.com/snicker02/2021Flames","stargazers_count":0}];
     const GITHUB_USER = "snicker02";
 
+    /* Category fallback for offline / file:// use. apps.json (same repo) is the source of truth
+       and replaces these when it loads; it also lists which apps have the image shelf wired in. */
     const FRACTAL_NAMES = new Set([
       "Gnarl-Studio","Kyma","Inversion","Pleroma","Catoptron3D","Hyperion",
       "Fractility","HallofMirrors3D","Serenity","Myflames","2021Flames",
@@ -257,8 +335,17 @@
       "2021Flames": "Archive of 2021 fractal flame parameter files and iterative compositions."
     };
 
+    const CATEGORY = new Map();
+    FRACTAL_NAMES.forEach(n => CATEGORY.set(n, "fractals"));
+    FLOW_IMAGE_NAMES.forEach(n => CATEGORY.set(n, "flow-image"));
+    MINECRAFT_NAMES.forEach(n => CATEGORY.set(n, "minecraft"));
+    const MANIFEST = new Map();          // name -> apps.json entry
+    let SHELF_TARGETS = [];              // apps that can receive a shelf image
+
+    const Shelf = window.SnickerShelf || null;
+
     let repos = INITIAL_REPOS.slice();
-    let activeCat = "all";
+    let activeCat = location.hash === "#shelf" && Shelf ? "shelf" : "all";
     let searchQuery = "";
     let sortMode = "index";
 
@@ -270,7 +357,8 @@
     function getDesc(r) {
       const raw = (r.description || "").trim();
       if (raw) return raw.replace(/\*\*/g, "");
-      return FALLBACK_DESC[r.name] || "Source repository and experiment files.";
+      const m = MANIFEST.get(r.name);
+      return (m && m.description) || FALLBACK_DESC[r.name] || "Source repository and experiment files.";
     }
     function fmtDate(iso) {
       const d = new Date(iso);
@@ -284,11 +372,10 @@
       const live = getLiveUrl(r) !== null;
       if (cat === "live") return live;
       if (cat === "repositories") return !live;
-      if (cat === "fractals") return FRACTAL_NAMES.has(r.name);
-      if (cat === "flow-image") return FLOW_IMAGE_NAMES.has(r.name);
-      if (cat === "minecraft") return MINECRAFT_NAMES.has(r.name);
+      if (cat === "fractals" || cat === "flow-image" || cat === "minecraft") return CATEGORY.get(r.name) === cat;
       return true;
     }
+    function shelfTarget(name) { return SHELF_TARGETS.find(a => a.name === name) || null; }
     function sortList(list) {
       const copy = list.slice();
       if (sortMode === "recent") {
@@ -438,6 +525,15 @@
     }
 
     function render() {
+      const onShelf = activeCat === "shelf";
+      document.querySelector(".controls").style.display = onShelf ? "none" : "";
+      document.getElementById("grid").style.display = onShelf ? "none" : "";
+      document.getElementById("shelfView").hidden = !onShelf;
+      if (onShelf) {
+        document.getElementById("emptyState").style.display = "none";
+        renderShelf();
+        return;
+      }
       const f = searchQuery.trim().toLowerCase();
       const filtered = sortList(repos.filter(r => {
         if (!matchesCat(r, activeCat)) return false;
@@ -460,8 +556,9 @@
       grid.innerHTML = filtered.map((r, idx) => {
         const live = getLiveUrl(r);
         const primary = live || r.html_url;
-        const metaParts = [live ? '<span class="live-label">Live App</span>' : "Repository", r.language ? esc(r.language) : "", fmtDate(r.pushed_at)].filter(Boolean).join(" · ");
-        return '<article class="card">' +
+        const shelfOk = live && Shelf && shelfTarget(r.name);
+        const metaParts = [live ? '<span class="live-label">Live App</span>' : "Repository", shelfOk ? '<span class="shelf-tag" title="Has the shared image shelf — drop an image on this card to open it here">⇄ Shelf</span>' : "", r.language ? esc(r.language) : "", fmtDate(r.pushed_at)].filter(Boolean).join(" · ");
+        return '<article class="card' + (shelfOk ? ' shelf-ok' : '') + '" data-name="' + esc(r.name) + '">' +
           '<div class="thumb-wrap">' +
             '<a href="' + esc(primary) + '" target="_blank" rel="noopener" class="thumb-link" aria-label="Open ' + esc(r.name) + '">' +
               '<canvas data-name="' + esc(r.name) + '"></canvas>' +
@@ -517,7 +614,7 @@
 
       const stage = document.getElementById("modalStage");
       if (live && live.includes("snicker02.github.io")) {
-        stage.innerHTML = '<iframe src="' + esc(live) + '" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>';
+        stage.innerHTML = '<iframe src="' + esc(live) + '" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"></iframe>';
       } else {
         stage.innerHTML = '<canvas id="modalCanvas"></canvas>';
         const mc = document.getElementById("modalCanvas");
@@ -540,10 +637,15 @@
     document.getElementById("navTabs").addEventListener("click", e => {
       const btn = e.target.closest("button[data-cat]");
       if (!btn) return;
-      activeCat = btn.getAttribute("data-cat");
-      document.querySelectorAll("#navTabs button").forEach(b => b.classList.toggle("active", b === btn));
-      render();
+      setCat(btn.getAttribute("data-cat"));
     });
+    function setCat(cat) {
+      activeCat = cat;
+      document.querySelectorAll("#navTabs button").forEach(b => b.classList.toggle("active", b.getAttribute("data-cat") === cat));
+      try { history.replaceState(null, "", cat === "shelf" ? "#shelf" : location.pathname + location.search); } catch (e) {}
+      render();
+    }
+    window.addEventListener("hashchange", () => { if (location.hash === "#shelf" && Shelf && activeCat !== "shelf") setCat("shelf"); });
     document.getElementById("searchInput").addEventListener("input", e => { searchQuery = e.target.value; render(); });
     document.getElementById("sortSelect").addEventListener("change", e => { sortMode = e.target.value; render(); });
 
@@ -564,7 +666,152 @@
       }
     }
     document.getElementById("syncBtn").addEventListener("click", syncGitHub);
+
+    /* ── app manifest (apps.json) ─────────────────────────────────────── */
+    async function loadManifest() {
+      try {
+        const res = await fetch("apps.json", { cache: "no-cache" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const m = await res.json();
+        CATEGORY.clear(); MANIFEST.clear();
+        (m.apps || []).forEach(a => { MANIFEST.set(a.name, a); if (a.category) CATEGORY.set(a.name, a.category); });
+        SHELF_TARGETS = (m.apps || []).filter(a => a.shelf && (a.accepts || []).includes("image"));
+        render();
+      } catch (err) { /* offline / file:// — keep embedded categories */ }
+    }
+
+    /* ── shared image shelf ───────────────────────────────────────────── */
+    let toastT = 0;
+    function toast(html, ms) {
+      const t = document.getElementById("toast");
+      t.innerHTML = html; t.classList.add("on");
+      clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), ms || 2400);
+    }
+    function shelfFail(e) {
+      if (e && e.url) toast('Pop-up blocked — <a href="' + esc(e.url) + '" target="_blank" rel="noopener">open ' + esc(e.app) + " ↗</a>", 9000);
+      else toast(esc((e && e.message) || "Something went wrong"));
+    }
+    function fmtBytes(n) {
+      if (!n) return "0 B";
+      const u = ["B", "KB", "MB", "GB"]; let i = 0;
+      while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+      return n.toFixed(i ? 1 : 0) + " " + u[i];
+    }
+    let shelfUrls = [];
+    let shelfItems = [];
+    async function updateShelfCount() {
+      if (!Shelf) return;
+      try { const n = await Shelf.count(); document.getElementById("shelfCount").textContent = n ? String(n) : ""; } catch (e) {}
+    }
+    async function renderShelf() {
+      if (!Shelf) return;
+      const grid = document.getElementById("shelfGrid");
+      const empty = document.getElementById("shelfEmpty");
+      try { shelfItems = await Shelf.list(); }
+      catch (e) { grid.innerHTML = ""; empty.hidden = false; empty.textContent = "Shelf storage is unavailable in this browser (" + e.message + ")."; return; }
+      if (activeCat !== "shelf") return;
+      shelfUrls.forEach(u => URL.revokeObjectURL(u)); shelfUrls = [];
+      const total = shelfItems.reduce((s, r) => s + (r.size || 0), 0);
+      let metaTxt = shelfItems.length + (shelfItems.length === 1 ? " image · " : " images · ") + fmtBytes(total);
+      document.getElementById("shelfMeta").textContent = metaTxt;
+      if (navigator.storage && navigator.storage.persisted) {
+        navigator.storage.persisted().then(p => { if (!p) document.getElementById("shelfMeta").textContent = metaTxt + " · browser may clear it if unused"; }).catch(() => {});
+      }
+      document.getElementById("shelfClear").disabled = !shelfItems.length;
+      empty.hidden = shelfItems.length > 0;
+      grid.innerHTML = shelfItems.map(r => {
+        const u = URL.createObjectURL(r.thumb); shelfUrls.push(u);
+        const chips = SHELF_TARGETS.map(a => '<button type="button" class="chip" data-send="' + esc(a.name) + '" data-id="' + esc(r.id) + '">' + esc(a.name) + " ↗</button>").join("");
+        return '<article class="card shelf-card">' +
+          '<div class="thumb-wrap"><img src="' + u + '" alt="" loading="lazy"></div>' +
+          '<div class="card-body">' +
+            '<div>' +
+              '<div class="meta">' + esc(r.app) + " · " + r.w + "×" + r.h + " · " + esc(new Date(r.created).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })) + "</div>" +
+              (r.name ? '<div class="desc" style="-webkit-line-clamp:1">' + esc(r.name) + "</div>" : "") +
+            "</div>" +
+            (chips ? '<div class="open-in"><span class="lbl">Open in</span>' + chips + "</div>" : "") +
+            '<div class="actions"><div class="actions-left">' +
+              '<button type="button" data-dl="' + esc(r.id) + '">Download</button>' +
+              '<button type="button" data-copy="' + esc(r.id) + '">Copy</button>' +
+            "</div>" +
+            '<button type="button" class="del" data-del="' + esc(r.id) + '">Delete</button></div>' +
+          "</div>" +
+        "</article>";
+      }).join("");
+    }
+    async function addToShelf(files) {
+      let n = 0;
+      for (const f of files) {
+        if (!f || !/^image\//.test(f.type)) continue;
+        try { await Shelf.put(f, { app: "snicker02.github.io", name: f.name || "" }); n++; } catch (e) { shelfFail(e); }
+      }
+      if (n) toast(n === 1 ? "Added to the shelf" : "Added " + n + " images to the shelf");
+      else if (files.length) toast("No images found in that drop");
+    }
+
+    if (Shelf) {
+      document.getElementById("shelfGrid").addEventListener("click", async e => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        if (b.dataset.send) { Shelf.sendItem(b.dataset.id, b.dataset.send).catch(shelfFail); return; }
+        if (b.dataset.dl) { const r = await Shelf.get(b.dataset.dl); if (r) Shelf.download(r.blob, Shelf.fileName(r)); return; }
+        if (b.dataset.copy) { Shelf.copy(Shelf.get(b.dataset.copy).then(r => r.blob)).then(() => toast("Copied to clipboard")).catch(shelfFail); return; }
+        if (b.dataset.del) { Shelf.remove(b.dataset.del).catch(shelfFail); }
+      });
+      document.getElementById("shelfFile").addEventListener("change", e => { const fs = [...e.target.files]; e.target.value = ""; addToShelf(fs); });
+      document.getElementById("shelfPaste").addEventListener("click", async () => {
+        try { const b = await Shelf.readClipboard(); if (b) addToShelf([b]); else toast("No image on the clipboard"); }
+        catch (e) { shelfFail(e); }
+      });
+      document.getElementById("shelfClear").addEventListener("click", () => {
+        if (confirm("Remove all " + shelfItems.length + " images from the shelf? This can't be undone.")) Shelf.clear().catch(shelfFail);
+      });
+      Shelf.onChange(() => { updateShelfCount(); if (activeCat === "shelf") renderShelf(); });
+
+      // paste anywhere (outside text fields) adds to the shelf
+      window.addEventListener("paste", e => {
+        if (e.target.closest && e.target.closest("input, textarea")) return;
+        const fs = [...((e.clipboardData && e.clipboardData.items) || [])].filter(i => i.type.startsWith("image/")).map(i => i.getAsFile());
+        if (fs.length) { e.preventDefault(); addToShelf(fs); if (activeCat !== "shelf") toast('Added to the shelf · <a href="#shelf">view</a>'); }
+      });
+
+      // drag & drop: onto an app card = open it there; anywhere else = add to the shelf
+      const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes("Files");
+      let dragDepth = 0, dropCard = null;
+      const setDropCard = c => { if (dropCard && dropCard !== c) dropCard.classList.remove("drop-target"); dropCard = c; if (c) c.classList.add("drop-target"); };
+      window.addEventListener("dragenter", e => { if (!hasFiles(e)) return; dragDepth++; document.body.classList.add("dragging-file"); });
+      window.addEventListener("dragleave", e => { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove("dragging-file"); setDropCard(null); } });
+      window.addEventListener("dragover", e => {
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        const c = activeCat === "shelf" ? null : e.target.closest && e.target.closest(".card.shelf-ok");
+        setDropCard(c || null);
+        e.dataTransfer.dropEffect = "copy";
+      });
+      window.addEventListener("drop", e => {
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        dragDepth = 0; document.body.classList.remove("dragging-file");
+        const card = dropCard; setDropCard(null);
+        const files = [...e.dataTransfer.files].filter(f => /^image\//.test(f.type));
+        if (!files.length) { toast("That isn't an image"); return; }
+        if (card) {
+          const name = card.getAttribute("data-name");
+          Shelf.send(files[0], name, { app: "snicker02.github.io", name: files[0].name })
+            .then(r => toast("Opened in " + esc(r.app)))
+            .catch(shelfFail);
+          return;
+        }
+        addToShelf(files).then(() => { if (activeCat !== "shelf") toast('Added to the shelf · <a href="#shelf">view</a>'); });
+      });
+      updateShelfCount();
+    } else {
+      document.getElementById("shelfTab").style.display = "none";
+    }
+
+    if (activeCat !== "all") setCat(activeCat);
     render();
+    loadManifest();
     syncGitHub();
   </script>
 </body>
