@@ -12,10 +12,11 @@
     { "name": "Entoptica",       "url": "/Entoptica/",       "category": "flow-image", "accepts": ["image", "video"], "produces": ["image"], "shelf": true,  "description": "Psychedelic layer pipeline" },
     { "name": "Painterly",       "url": "/Painterly/",       "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": true,  "description": "Brush-stroke painting" },
 
-    { "name": "Scrawlery",       "url": "/Scrawlery/",       "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": false },
-    { "name": "Petri",           "url": "/Petri/",           "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": false },
+    { "name": "Scrawlery",       "url": "/Scrawlery/",       "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": true,  "description": "Image to flow-field line art" },
+    { "name": "Petri",           "url": "/Petri/",           "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": true,  "description": "Reaction-diffusion seeded from images" },
     { "name": "Strata",          "url": "/Strata/",          "category": "flow-image", "accepts": [],                 "produces": ["image"], "shelf": false },
-    { "name": "FlowFieldsPlotter","url": "/FlowFieldsPlotter/","category": "flow-image","accepts": ["image"],         "produces": ["image"], "shelf": false },
+    { "name": "FlowFieldsPlotter","url": "/FlowFieldsPlotter/","category": "flow-image","accepts": ["image"],         "produces": ["image"], "shelf": true,  "description": "Flow-field pen-plotter line art" },
+    { "name": "Aperture-Bench",  "url": "/Aperture-Bench/",  "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": true,  "description": "Client-side image adjustment bench" },
     { "name": "FlowFields3D",    "url": "/FlowFields3D/",    "category": "flow-image", "accepts": [],                 "produces": ["image"], "shelf": false },
     { "name": "Ekphrasis",       "url": "/Ekphrasis/",       "category": "flow-image", "accepts": ["image", "video"], "produces": [],        "shelf": false },
     { "name": "MeltMixPix",      "url": "/MeltMixPix/",      "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": false },
@@ -42,7 +43,7 @@
     { "name": "Hypostyle",       "url": "/Hypostyle/",       "category": "minecraft",  "accepts": [],                 "produces": [],        "shelf": false },
     { "name": "Fieldcraft",      "url": "/Fieldcraft/",      "category": "minecraft",  "accepts": [],                 "produces": [],        "shelf": false },
     { "name": "Mazecraft",       "url": "/Mazecraft/",       "category": "minecraft",  "accepts": [],                 "produces": [],        "shelf": false },
-    { "name": "Imagecraft",      "url": "/Imagecraft/",      "category": "minecraft",  "accepts": ["image"],          "produces": [],        "shelf": false,
+    { "name": "Imagecraft",      "url": "/Imagecraft/",      "category": "minecraft",  "accepts": [],          "produces": [],        "shelf": false,
       "description": "Turn any photo into a Minecraft Bedrock block build: pixelize to a block grid, match palettes in 3D, and export .mcpack or .obj." },
     { "name": "IFScraft",        "url": "/IFScraft/",        "category": "minecraft",  "accepts": [],                 "produces": [],        "shelf": false }
   ]
