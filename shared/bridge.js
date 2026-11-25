@@ -1,4 +1,4 @@
-/*! snicker02 Shelf v1.0.0 — shared image shelf + app hand-off for snicker02.github.io
+/*! snicker02 Shelf v1.0.1 — shared image shelf + app hand-off for snicker02.github.io
  *
  *  Every app under https://snicker02.github.io/ shares one browser origin, so they can share
  *  one IndexedDB store. This classic script (no dependencies, no build) exposes
@@ -18,7 +18,7 @@
   'use strict';
   if (window.SnickerShelf) return;
 
-  const VERSION = '1.0.0';
+  const VERSION = '1.0.1';
   const HOME = 'https://snicker02.github.io';
   const DB_NAME = 'snicker02-shelf', STORE = 'images';
   const MAX_ITEMS = 200, THUMB = 320;
@@ -264,8 +264,7 @@ button.danger:hover{border-color:#f87171;color:#fca5a5}
 .tools{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px 4px}
 .send{padding:8px 14px 4px}
 .lbl{color:#9aa3b8;font-size:11.5px;margin-bottom:5px;display:block}
-.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-.chips::-webkit-scrollbar{display:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
 .chips button{border-radius:999px;border-color:rgba(56,226,199,.35);color:#9ff3e4}
 .chips button:hover{border-color:#38e2c7;color:#38e2c7}
 .none{color:#717a90;font-size:12px}
