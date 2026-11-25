@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "about": "App registry for snicker02.github.io. category drives the index tabs; shelf:true means the app has the shared image shelf (shared/bridge.js) wired in and can receive ?shelf=<id>. accepts/produces describe what it can take in and hand out.",
+  "categories": {
+    "fractals": "3D & Fractals",
+    "flow-image": "Flow & Image",
+    "minecraft": "Minecraft"
+  },
+  "apps": [
+    { "name": "Catoptron",       "url": "/Catoptron/",       "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": true,  "description": "Fold-stack photo reflector" },
+    { "name": "Databender",      "url": "/Databender/",      "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": true,  "description": "Raw-byte glitch / databending" },
+    { "name": "Entoptica",       "url": "/Entoptica/",       "category": "flow-image", "accepts": ["image", "video"], "produces": ["image"], "shelf": true,  "description": "Psychedelic layer pipeline" },
+    { "name": "Painterly",       "url": "/Painterly/",       "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": true,  "description": "Brush-stroke painting" },
+
+    { "name": "Scrawlery",       "url": "/Scrawlery/",       "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": false },
+    { "name": "Petri",           "url": "/Petri/",           "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": false },
+    { "name": "Strata",          "url": "/Strata/",          "category": "flow-image", "accepts": [],                 "produces": ["image"], "shelf": false },
+    { "name": "FlowFieldsPlotter","url": "/FlowFieldsPlotter/","category": "flow-image","accepts": ["image"],         "produces": ["image"], "shelf": false },
+    { "name": "FlowFields3D",    "url": "/FlowFields3D/",    "category": "flow-image", "accepts": [],                 "produces": ["image"], "shelf": false },
+    { "name": "Ekphrasis",       "url": "/Ekphrasis/",       "category": "flow-image", "accepts": ["image", "video"], "produces": [],        "shelf": false },
+    { "name": "MeltMixPix",      "url": "/MeltMixPix/",      "category": "flow-image", "accepts": ["image"],          "produces": ["image"], "shelf": false },
+    { "name": "MeltMixPix-testing","url": "/MeltMixPix-testing/","category": "flow-image","accepts": ["image"],       "produces": ["image"], "shelf": false },
+    { "name": "Evolved-art",     "category": "flow-image" },
+
+    { "name": "Gnarl-Studio",    "url": "/Gnarl-Studio/",    "category": "fractals",   "accepts": [],                 "produces": ["image"], "shelf": false },
+    { "name": "Kyma",            "url": "/Kyma/",            "category": "fractals",   "accepts": [],                 "produces": ["image"], "shelf": false },
+    { "name": "Inversion",       "url": "/Inversion/",       "category": "fractals",   "accepts": [],                 "produces": ["image"], "shelf": false },
+    { "name": "Pleroma",         "url": "/Pleroma/",         "category": "fractals",   "accepts": [],                 "produces": ["image"], "shelf": false },
+    { "name": "Catoptron3D",     "url": "/Catoptron3D/",     "category": "fractals",   "accepts": [],                 "produces": ["image"], "shelf": false },
+    { "name": "Serenity",        "category": "fractals" },
+    { "name": "Hyperion",        "category": "fractals" },
+    { "name": "Fractility",      "category": "fractals" },
+    { "name": "Fractility-Presets","category": "fractals" },
+    { "name": "HallofMirrors3D", "category": "fractals" },
+    { "name": "Myflames",        "category": "fractals" },
+    { "name": "2021Flames",      "category": "fractals", "description": "Archive of 2021 fractal flame parameter files and iterative compositions." },
+    { "name": "MandelbroParams", "category": "fractals" },
+    { "name": "My-JWF-custom-variations","category": "fractals" },
+    { "name": "Swan-custom-variations","category": "fractals" },
+
+    { "name": "Polis",           "url": "/Polis/",           "category": "minecraft",  "accepts": [],                 "produces": [],        "shelf": false },
+    { "name": "Hypostyle",       "url": "/Hypostyle/",       "category": "minecraft",  "accepts": [],                 "produces": [],        "shelf": false },
+    { "name": "Fieldcraft",      "url": "/Fieldcraft/",      "category": "minecraft",  "accepts": [],                 "produces": [],        "shelf": false },
+    { "name": "Mazecraft",       "url": "/Mazecraft/",       "category": "minecraft",  "accepts": [],                 "produces": [],        "shelf": false },
+    { "name": "Imagecraft",      "url": "/Imagecraft/",      "category": "minecraft",  "accepts": ["image"],          "produces": [],        "shelf": false,
+      "description": "Turn any photo into a Minecraft Bedrock block build: pixelize to a block grid, match palettes in 3D, and export .mcpack or .obj." },
+    { "name": "IFScraft",        "url": "/IFScraft/",        "category": "minecraft",  "accepts": [],                 "produces": [],        "shelf": false }
+  ]
+}
