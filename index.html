@@ -187,6 +187,28 @@
     .shelf-info b { font-size: 16px; margin-right: 10px; }
     .shelf-info span { font-family: var(--font-mono); font-size: 12px; color: var(--dim); }
     .shelf-note { margin: 0 0 22px; color: var(--muted); font-size: 13.5px; line-height: 1.55; max-width: 80ch; }
+    .shelf-apps { margin-top: 40px; }
+    .shelf-apps h2 { font-size: 16px; margin: 0 0 6px; letter-spacing: -0.01em; }
+    .shelf-apps p { margin: 0 0 14px; color: var(--muted); font-size: 13.5px; }
+    .shelf-apps-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+    .shelf-apps table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .shelf-apps th, .shelf-apps td { padding: 9px 14px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .shelf-apps th { font-size: 12px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: 0.04em; background: rgba(255, 255, 255, 0.02); }
+    .shelf-apps tr:last-child td { border-bottom: 0; }
+    .shelf-apps td.becomes { white-space: normal; color: var(--muted); min-width: 180px; }
+    .shelf-apps td.yn { text-align: center; width: 1%; }
+    .shelf-apps th.yn { text-align: center; }
+    .shelf-apps .yes { color: var(--accent); font-weight: 700; }
+    .shelf-apps .no { color: var(--dim); }
+    .shelf-apps a { color: var(--ink); text-decoration: none; font-weight: 600; }
+    .shelf-apps a:hover { color: var(--accent); }
+    @media (max-width: 760px) {
+      .shelf-apps th, .shelf-apps td { padding: 8px 8px; font-size: 13px; }
+      .shelf-apps th { font-size: 10.5px; letter-spacing: 0.02em; white-space: normal; }
+      .shelf-apps td.becomes { min-width: 0; }
+      .shelf-apps th.yn, .shelf-apps td.yn { padding-left: 4px; padding-right: 4px; }
+      .shelf-apps td.becomes { font-size: 12.5px; }
+    }
     .sync-btn.danger:hover { border-color: #f87171; color: #fca5a5; }
     label.sync-btn { display: inline-flex; align-items: center; }
     body.dragging-file #shelfView .shelf-grid,
@@ -284,6 +306,16 @@
       <p class="shelf-note">Every app with a <b>⇄ Shelf</b> button reads and writes this same shelf. Save an image in one app, then open it in another. You can also drop or paste images here, or drop an image onto an app's card to open it in that app. Images are kept in this browser only, not uploaded anywhere.</p>
       <div id="shelfGrid" class="grid shelf-grid"></div>
       <div id="shelfEmpty" class="empty" hidden>The shelf is empty. Add images here, or use <b>⇄ Shelf → Save current</b> inside an app.</div>
+      <div class="shelf-apps" id="shelfApps" hidden>
+        <h2>Apps on the shelf</h2>
+        <p id="shelfAppsMeta"></p>
+        <div class="shelf-apps-wrap">
+          <table>
+            <thead><tr><th>App</th><th class="yn" title="Can receive a shelf image">Receives</th><th class="yn" title="Can send its image to the shelf">Sends</th><th>Shelf image becomes</th></tr></thead>
+            <tbody id="shelfAppsBody"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <footer>
@@ -343,6 +375,7 @@
     MINECRAFT_NAMES.forEach(n => CATEGORY.set(n, "minecraft"));
     const MANIFEST = new Map();          // name -> apps.json entry
     let SHELF_TARGETS = [];              // apps that can receive a shelf image
+    let SHELF_APPS = [];                 // every app with the shelf wired in
 
     const Shelf = window.SnickerShelf || null;
 
@@ -678,6 +711,8 @@
         CATEGORY.clear(); MANIFEST.clear();
         (m.apps || []).forEach(a => { MANIFEST.set(a.name, a); if (a.category) CATEGORY.set(a.name, a.category); });
         SHELF_TARGETS = (m.apps || []).filter(a => a.shelf && (a.accepts || []).includes("image"));
+        SHELF_APPS = (m.apps || []).filter(a => a.shelf).sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+        renderShelfApps();
         render();
       } catch (err) { /* offline / file:// — keep embedded categories */ }
     }
@@ -705,6 +740,25 @@
       if (!Shelf) return;
       try { const n = await Shelf.count(); document.getElementById("shelfCount").textContent = n ? String(n) : ""; } catch (e) {}
     }
+    // the "Apps on the shelf" table, straight from apps.json
+    function renderShelfApps() {
+      const box = document.getElementById("shelfApps");
+      if (!SHELF_APPS.length) { box.hidden = true; return; }
+      const mark = on => on ? '<span class="yes" title="Yes">✓</span>' : '<span class="no" title="No">—</span>';
+      document.getElementById("shelfAppsBody").innerHTML = SHELF_APPS.map(a => {
+        const recv = (a.accepts || []).includes("image"), send = (a.produces || []).includes("image");
+        const href = new URL(a.url || ("/" + a.name + "/"), location.origin).href;
+        return "<tr><td><a href=\"" + esc(href) + "\" target=\"_blank\" rel=\"noopener\">" + esc(a.name) + "</a></td>" +
+          '<td class="yn">' + mark(recv) + '</td><td class="yn">' + mark(send) + "</td>" +
+          '<td class="becomes">' + (recv ? esc(a.becomes || "") : '<span class="no">—</span>') + "</td></tr>";
+      }).join("");
+      const nRecv = SHELF_APPS.filter(a => (a.accepts || []).includes("image")).length;
+      const nSend = SHELF_APPS.filter(a => (a.produces || []).includes("image")).length;
+      document.getElementById("shelfAppsMeta").textContent =
+        SHELF_APPS.length + " apps have the ⇄ Shelf button. " + nRecv + " can receive a shelf image, and " + nSend + " can send theirs to the shelf.";
+      box.hidden = false;
+    }
+
     async function renderShelf() {
       if (!Shelf) return;
       const grid = document.getElementById("shelfGrid");
