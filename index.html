@@ -47,6 +47,17 @@
       text-decoration: none; white-space: nowrap;
     }
     .top-cta:hover { filter: brightness(1.08); }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    /* Buy Me a Coffee: a plain link styled like their widget, so no third-party script runs on this origin */
+    .bmc-btn {
+      display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px 7px 11px; border-radius: 8px;
+      background: #BD5FFF; color: #fff; border: 1px solid #000; font-size: 13px; font-weight: 700;
+      text-decoration: none; white-space: nowrap; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+      transition: filter 0.15s, transform 0.15s;
+    }
+    .bmc-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .bmc-btn svg { width: 18px; height: 18px; flex: none; }
+    .top-cta .short { display: none; }
 
     /* Intro */
     .hero { padding: 40px 0 28px; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
@@ -238,6 +249,10 @@
     @media (max-width: 760px) {
       .container { padding: 0 16px 56px; }
       .topbar { gap: 12px 16px; padding: 14px 0 0; border-bottom: 0; }
+      .top-actions { gap: 8px; }
+      .top-cta .long { display: none; }
+      .top-cta .short { display: inline; }
+      .bmc-btn, .top-cta { padding: 7px 11px; font-size: 12.5px; }
       .nav {
         order: 3; width: 100%; flex-wrap: nowrap; overflow-x: auto; gap: 20px; scrollbar-width: none;
         border-bottom: 1px solid var(--border);
@@ -265,7 +280,17 @@
         <button type="button" data-cat="repositories">Repositories</button>
         <button type="button" data-cat="shelf" id="shelfTab" title="Shared image shelf — images every app can use">⇄ Shelf<span class="pill" id="shelfCount"></span></button>
       </nav>
-      <a href="https://github.com/snicker02?tab=repositories" target="_blank" rel="noopener" class="top-cta">GitHub Profile</a>
+      <div class="top-actions">
+        <a href="https://www.buymeacoffee.com/snicker02" target="_blank" rel="noopener" class="bmc-btn" title="Support my work on Buy Me a Coffee">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 8h12v6.5A5.5 5.5 0 0 1 11.5 20h-1A5.5 5.5 0 0 1 5 14.5V8Z" fill="#FFDD00" stroke="#000" stroke-width="1.4" stroke-linejoin="round"/>
+            <path d="M17 10h1.2a2.3 2.3 0 0 1 0 4.6H17" fill="none" stroke="#000" stroke-width="1.4"/>
+            <path d="M8.5 3.5c-.6.9.6 1.6 0 2.5M11.5 3.5c-.6.9.6 1.6 0 2.5M14.5 3.5c-.6.9.6 1.6 0 2.5" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          Buy me a coffee
+        </a>
+        <a href="https://github.com/snicker02?tab=repositories" target="_blank" rel="noopener" class="top-cta"><span class="long">GitHub Profile</span><span class="short">GitHub</span></a>
+      </div>
     </header>
 
     <section class="hero">
