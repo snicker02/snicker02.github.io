@@ -25,6 +25,7 @@
     {"name": "Serenity", "category": "fractals"},
     {"name": "Hyperion", "category": "fractals"},
     {"name": "Fractility", "category": "fractals"},
+    {"name": "Fractility-Web", "url": "/Fractility-Web/", "category": "fractals", "accepts": ["image"], "produces": ["image"], "shelf": true, "description": "2D fractal video feedback", "becomes": "Image Input start pattern"},
     {"name": "Fractility-Presets", "category": "fractals"},
     {"name": "HallofMirrors3D", "category": "fractals"},
     {"name": "Myflames", "category": "fractals"},
