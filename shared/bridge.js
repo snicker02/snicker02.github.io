@@ -1,4 +1,4 @@
-/*! snicker02 Shelf v1.0.1 — shared image shelf + app hand-off for snicker02.github.io
+/*! snicker02 Shelf v1.0.2 — shared image shelf + app hand-off for snicker02.github.io
  *
  *  Every app under https://snicker02.github.io/ shares one browser origin, so they can share
  *  one IndexedDB store. This classic script (no dependencies, no build) exposes
@@ -18,7 +18,7 @@
   'use strict';
   if (window.SnickerShelf) return;
 
-  const VERSION = '1.0.1';
+  const VERSION = '1.0.2';
   const HOME = 'https://snicker02.github.io';
   const DB_NAME = 'snicker02-shelf', STORE = 'images';
   const MAX_ITEMS = 200, THUMB = 320;
@@ -268,7 +268,9 @@ button.danger:hover{border-color:#f87171;color:#fca5a5}
 .chips button{border-radius:999px;border-color:rgba(56,226,199,.35);color:#9ff3e4}
 .chips button:hover{border-color:#38e2c7;color:#38e2c7}
 .none{color:#717a90;font-size:12px}
-.grid{flex:1;overflow:auto;padding:10px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;align-content:start;overscroll-behavior:contain}
+/* tools, send buttons and thumbnails scroll together, so a long Send to list can never squeeze the images out */
+.body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.grid{padding:10px 14px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;align-content:start}
 .th{position:relative;padding:0;aspect-ratio:1;border-radius:8px;overflow:hidden;background:#07090e;border:2px solid transparent}
 .th img{width:100%;height:100%;object-fit:cover;display:block}
 .th span{position:absolute;left:0;right:0;bottom:0;padding:3px 5px;font-size:10px;text-align:left;color:#cfd6e4;
@@ -282,7 +284,7 @@ button.danger:hover{border-color:#f87171;color:#fca5a5}
 footer{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 14px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:#717a90}
 footer a{color:#9aa3b8;text-decoration:none}
 footer a:hover{color:#38e2c7}
-.drag .grid{outline:2px dashed #38e2c7;outline-offset:-6px}
+.drag .body{outline:2px dashed #38e2c7;outline-offset:-6px}
 .toast{position:absolute;left:50%;bottom:calc(58px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:90%;
   background:#0e1118;border:1px solid rgba(56,226,199,.5);color:#eef2f8;border-radius:9px;padding:8px 12px;font-size:12.5px;
   opacity:0;pointer-events:none;transition:opacity .18s}
@@ -318,6 +320,7 @@ footer a:hover{color:#38e2c7}
 <div class="bk"></div>
 <section class="panel" role="dialog" aria-modal="true" aria-label="Image shelf">
   <header><b>Shelf</b><span class="count"></span><span class="sp"></span><button class="x" data-a="close" aria-label="Close">✕</button></header>
+  <div class="body">
   <div class="tools">
     ${canSave ? '<button class="pri" data-a="save" title="Put the current image on the shelf">＋ Save current</button><button data-a="copycur" title="Copy the current image to the system clipboard">Copy current</button>' : ''}
     <button data-a="paste" title="Add an image from the system clipboard">Paste</button>
@@ -325,6 +328,7 @@ footer a:hover{color:#38e2c7}
   </div>
   <div class="send"><span class="lbl"></span><div class="chips"></div></div>
   <div class="grid"></div>
+  </div>
   <div class="item">
     <div class="info"></div>
     <div class="acts">
@@ -384,7 +388,7 @@ footer a:hover{color:#38e2c7}
     }
     function open() {
       if (isOpen) return;
-      isOpen = true; host.style.display = 'block';
+      isOpen = true; host.style.display = 'block'; $('.body').scrollTop = 0;
       refresh();
       targets('image').then(t => { tgts = t; renderChips(); });
     }
@@ -414,7 +418,13 @@ footer a:hover{color:#38e2c7}
     root.addEventListener('click', async e => {
       const t = e.target.closest('[data-a],[data-to],[data-id]');
       if (!t) { if (e.target.classList.contains('bk')) close(); return; }
-      if (t.dataset.id) { sel = sel === t.dataset.id ? null : t.dataset.id; root.querySelectorAll('.th').forEach(b => b.classList.toggle('sel', b.dataset.id === sel)); renderItem(); renderChips(); return; }
+      if (t.dataset.id) {
+        sel = sel === t.dataset.id ? null : t.dataset.id;
+        root.querySelectorAll('.th').forEach(b => b.classList.toggle('sel', b.dataset.id === sel));
+        renderItem(); renderChips();
+        if (sel) t.scrollIntoView({ block: 'nearest' });   // keep it clear of the action bar that just appeared
+        return;
+      }
       if (t.dataset.to) {
         const p = sel ? sendItem(sel, t.dataset.to) : send(current(), t.dataset.to, Object.assign({ app: currentApp }, meta()));
         p.then(r => toast('Sent to ' + esc(r.app))).catch(failed);
@@ -444,6 +454,8 @@ footer a:hover{color:#38e2c7}
     // keep keyboard / drop / paste inside the shelf from reaching the app underneath
     host.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') close(); });
     host.addEventListener('keyup', e => e.stopPropagation());
+    // an app's own page-wide touch / wheel handlers must never see (or cancel) scrolling inside the shelf
+    ['touchstart', 'touchmove', 'wheel'].forEach(ev => host.addEventListener(ev, e => e.stopPropagation(), { passive: true }));
     ['dragenter', 'dragover'].forEach(ev => host.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); panel.classList.add('drag'); }));
     host.addEventListener('dragleave', e => { e.stopPropagation(); if (!host.contains(e.relatedTarget)) panel.classList.remove('drag'); });
     host.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); panel.classList.remove('drag'); addBlobs([...(e.dataTransfer ? e.dataTransfer.files : [])]); });
